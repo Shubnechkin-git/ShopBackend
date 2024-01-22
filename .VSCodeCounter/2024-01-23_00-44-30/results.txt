@@ -1,0 +1,78 @@
+Date : 2024-01-23 00:44:30
+Directory : d:\VS Code Project\Магазинчик
+Total : 40 files,  21251 codes, 139 comments, 205 blanks, all 21595 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| JSON       |          4 |     19,937 |          0 |          4 |     19,941 |
+| JavaScript |         26 |      1,069 |        135 |        142 |      1,346 |
+| CSS        |          7 |        162 |          4 |         26 |        192 |
+| Markdown   |          2 |         70 |          0 |         32 |        102 |
+| HTML       |          1 |         13 |          0 |          1 |         14 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                     | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                        |         40 |     21,251 |        139 |        205 |     21,595 |
+| . (Files)                                                                |          3 |      1,660 |          0 |          2 |      1,662 |
+| backend                                                                  |          7 |        246 |        106 |         50 |        402 |
+| my-shop                                                                  |         30 |     19,345 |         33 |        153 |     19,531 |
+| my-shop (Files)                                                          |          3 |     18,347 |          0 |         34 |     18,381 |
+| my-shop\public                                                           |          1 |         13 |          0 |          1 |         14 |
+| my-shop\src                                                              |         26 |        985 |         33 |        118 |      1,136 |
+| my-shop\src (Files)                                                      |          2 |         69 |          5 |         14 |         88 |
+| my-shop\src\Components                                                   |         11 |        570 |         18 |         56 |        644 |
+| my-shop\src\Page                                                         |          6 |        184 |          6 |         22 |        212 |
+| my-shop\src\styles                                                       |          7 |        162 |          4 |         26 |        192 |
++--------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                 | language   | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| d:\VS Code Project\Магазинчик\README.md                                  | Markdown   |         17 |          0 |          0 |         17 |
+| d:\VS Code Project\Магазинчик\backend\catalog.js                         | JavaScript |         30 |         22 |          3 |         55 |
+| d:\VS Code Project\Магазинчик\backend\items.js                           | JavaScript |         42 |          0 |          5 |         47 |
+| d:\VS Code Project\Магазинчик\backend\login.js                           | JavaScript |         40 |          4 |          5 |         49 |
+| d:\VS Code Project\Магазинчик\backend\misc.js                            | JavaScript |         60 |          0 |          8 |         68 |
+| d:\VS Code Project\Магазинчик\backend\register.js                        | JavaScript |         29 |          0 |          2 |         31 |
+| d:\VS Code Project\Магазинчик\backend\routes.js                          | JavaScript |          4 |         78 |          1 |         83 |
+| d:\VS Code Project\Магазинчик\backend\server.js                          | JavaScript |         41 |          2 |         26 |         69 |
+| d:\VS Code Project\Магазинчик\my-shop\README.md                          | Markdown   |         53 |          0 |         32 |         85 |
+| d:\VS Code Project\Магазинчик\my-shop\package-lock.json                  | JSON       |     18,247 |          0 |          1 |     18,248 |
+| d:\VS Code Project\Магазинчик\my-shop\package.json                       | JSON       |         47 |          0 |          1 |         48 |
+| d:\VS Code Project\Магазинчик\my-shop\public\index.html                  | HTML       |         13 |          0 |          1 |         14 |
+| d:\VS Code Project\Магазинчик\my-shop\src\App.js                         | JavaScript |         58 |          5 |         11 |         74 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\CatalogItems.js     | JavaScript |         36 |          0 |          2 |         38 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\Filters.js          | JavaScript |         36 |          0 |          2 |         38 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\Footer.js           | JavaScript |         36 |          0 |          2 |         38 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\Header.js           | JavaScript |         59 |          0 |          2 |         61 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\Item.js             | JavaScript |         45 |          0 |          4 |         49 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\Items.js            | JavaScript |         47 |          3 |         10 |         60 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\LoginForm.js        | JavaScript |         68 |          1 |          9 |         78 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\RegistrationForm.js | JavaScript |        169 |         11 |         18 |        198 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\Search.js           | JavaScript |         18 |          0 |          2 |         20 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\SwiperMy.js         | JavaScript |         50 |          3 |          3 |         56 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Components\UserProfile.js      | JavaScript |          6 |          0 |          2 |          8 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Page\About.js                  | JavaScript |          6 |          0 |          2 |          8 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Page\Cart.js                   | JavaScript |          8 |          0 |          3 |         11 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Page\Catalog.js                | JavaScript |         47 |          3 |          7 |         57 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Page\Home.js                   | JavaScript |         13 |          0 |          2 |         15 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Page\Product.js                | JavaScript |         66 |          0 |          2 |         68 |
+| d:\VS Code Project\Магазинчик\my-shop\src\Page\Profile.js                | JavaScript |         44 |          3 |          6 |         53 |
+| d:\VS Code Project\Магазинчик\my-shop\src\index.js                       | JavaScript |         11 |          0 |          3 |         14 |
+| d:\VS Code Project\Магазинчик\my-shop\src\styles\app.css                 | CSS        |         11 |          2 |          3 |         16 |
+| d:\VS Code Project\Магазинчик\my-shop\src\styles\card.css                | CSS        |         93 |          2 |         12 |        107 |
+| d:\VS Code Project\Магазинчик\my-shop\src\styles\footer.css              | CSS        |         18 |          0 |          2 |         20 |
+| d:\VS Code Project\Магазинчик\my-shop\src\styles\header.css              | CSS        |         22 |          0 |          5 |         27 |
+| d:\VS Code Project\Магазинчик\my-shop\src\styles\home.css                | CSS        |          9 |          0 |          2 |         11 |
+| d:\VS Code Project\Магазинчик\my-shop\src\styles\index.css               | CSS        |          0 |          0 |          1 |          1 |
+| d:\VS Code Project\Магазинчик\my-shop\src\styles\profile.css             | CSS        |          9 |          0 |          1 |         10 |
+| d:\VS Code Project\Магазинчик\package-lock.json                          | JSON       |      1,626 |          0 |          1 |      1,627 |
+| d:\VS Code Project\Магазинчик\package.json                               | JSON       |         17 |          0 |          1 |         18 |
+| Total                                                                    |            |     21,251 |        139 |        205 |     21,595 |
++--------------------------------------------------------------------------+------------+------------+------------+------------+------------+

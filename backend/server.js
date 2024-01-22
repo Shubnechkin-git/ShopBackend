@@ -5,10 +5,10 @@ const port = process.env.PORT || 5000; //Строка 3
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
-const login = require('./login');
+const login = require('./login'); 
 const register = require('./register');
 const { getHotItems, getNoveltyItems, getDiscountItems, getProduct } = require('./items');
-const { getAnyRoute, getExpressBackendRoute } = require('./routes');
+const { getAnyRoute, getExpressBackendRoute, checkUser, getUserInfo, checkSession, logutUser } = require('./routes');
 const { getCatalogItem } = require('./catalog');
 // Сообщение о том, что сервер запущен и прослушивает указанный порт 
 app.listen(port, () => console.log(`Listening on port http://localhost:${port}`)); //Строка 6
@@ -58,7 +58,15 @@ getProduct(app); //возращает
 
 getCatalogItem(app); //возращает товары в каталог
 
+checkUser(app);//проверяет есть ли пользователь в бд
+
+checkSession(app);//проверяет сессию
+
 // getAnyRoute(app);//ответ на /*
+
+logutUser(app);//реагирует на конпку выход из профиля по пути /logout
+
+getUserInfo(app);//ответ на user
 
 getExpressBackendRoute(app);//ответ на express_backend
 
