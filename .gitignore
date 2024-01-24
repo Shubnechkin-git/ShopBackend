@@ -2,3 +2,24 @@
 node_modules
 /.vscode
 /.VSCodeCounter
+
+my-shop/node_modules
+my-shop//.pnp
+my-shop/.pnp.js
+
+# testing
+my-shop//coverage
+
+# production
+my-shop/build
+
+# misc
+my-shop/.DS_Store
+my-shop/.env.local
+my-shop/.env.development.local
+my-shop/.env.test.local
+my-shop/.env.production.local
+
+my-shop/npm-debug.log*
+my-shop/yarn-debug.log*
+my-shop/yarn-error.log*
