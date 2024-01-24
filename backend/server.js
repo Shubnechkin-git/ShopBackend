@@ -1,11 +1,12 @@
 const express = require('express'); //Строка 1
 const app = express(); //Строка 2
 const port = process.env.PORT || 5000; //Строка 3
+const path = require('path');
 
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
-const login = require('./login'); 
+const login = require('./login');
 const register = require('./register');
 const { getHotItems, getNoveltyItems, getDiscountItems, getProduct } = require('./items');
 const { getAnyRoute, getExpressBackendRoute, checkUser, getUserInfo, checkSession, logutUser } = require('./routes');
@@ -22,7 +23,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, '../my-shop/build')));
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -62,7 +63,7 @@ checkUser(app);//проверяет есть ли пользователь в б
 
 checkSession(app);//проверяет сессию
 
-// getAnyRoute(app);//ответ на /*
+getAnyRoute(app);//ответ на /*
 
 logutUser(app);//реагирует на конпку выход из профиля по пути /logout
 
