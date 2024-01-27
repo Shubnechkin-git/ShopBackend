@@ -49,7 +49,7 @@ const checkUser = (app) => {
 
 const getUserInfo = (app) => {
     // Эндпоинт для получения информации о пользователе
-    app.get('/user', (req, res) => {
+    app.post('/user', (req, res) => {
         const sessionId = req.cookies.sessionId;
 
         if (sessionId) {
