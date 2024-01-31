@@ -117,6 +117,79 @@ const checkSession = (app) => {
         }
     });
 }
+
+const getProduct = (product_id, category) => {
+    return new Promise((resolve, reject) => {
+        let productInfo = {
+            table_name: null,
+            title: null,
+            price: null,
+            img: null,
+        }
+
+        const connection = mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            password: 'root',
+            database: 'gena_booker'
+        });
+
+        switch (category) {
+            case "Популярные товары":
+                productInfo.table_name = "items";
+                break;
+            case "Новинки":
+                productInfo.table_name = "novelty";
+                break;
+            case "Скидки":
+                productInfo.table_name = "discounts";
+                break;
+            default:
+                reject('Неверная категория товара');
+                return;
+        }
+
+        const query = `SELECT * FROM ${productInfo.table_name} WHERE id = ?`;
+
+        connection.query(query, [product_id], (error, results) => {
+            if (error) {
+                connection.end();
+                reject('Ошибка при получении предмета: ' + error.message);
+            } else {
+                productInfo.title = results[0].title;
+                productInfo.price = results[0].price;
+                productInfo.img = results[0].img;
+                connection.end();
+                resolve(productInfo);
+            }
+        });
+    });
+}
+
+const addToCart = (app) => {
+    app.post('/cart', async (req, res) => {
+        // Получение данных о товаре из тела запроса
+        const request_info = {
+            product_id: req.body.product_id,
+            category: req.body.category,
+            user_info: req.body.user_info,
+        }
+        // Проверка наличия необходимых данных
+        if (!request_info.product_id || !request_info.category || !request_info.user_info) {
+            return res.status(400).json({ error: 'Недостаточно данных для добавления в корзину' });
+        } else {
+            try {
+                let product_info = await getProduct(request_info.product_id, request_info.category);
+                return res.status(200).json({ success: true, message: 'Товар успешно добавлен в корзину', data: { request_info, product_info } });
+            } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Произошла ошибка при получении информации о товаре' });
+            }
+        }
+    });
+};
+
+
 const logutUser = (app) => {
     app.post('/logout', (req, res) => {
         // Удаление куки сессии
@@ -131,5 +204,6 @@ module.exports = {
     checkUser,
     getUserInfo,
     checkSession,
-    logutUser
+    logutUser,
+    addToCart
 }

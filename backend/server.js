@@ -9,7 +9,7 @@ const bodyParser = require('body-parser');
 const login = require('./login');
 const register = require('./register');
 const { getHotItems, getNoveltyItems, getDiscountItems, getProduct } = require('./items');
-const { getAnyRoute, getExpressBackendRoute, checkUser, getUserInfo, checkSession, logutUser } = require('./routes');
+const { getAnyRoute, getExpressBackendRoute, checkUser, getUserInfo, checkSession, logutUser, addToCart } = require('./routes');
 const { getCatalogItem } = require('./catalog');
 // Сообщение о том, что сервер запущен и прослушивает указанный порт 
 app.listen(port, () => console.log(`Listening on port http://localhost:${port}`)); //Строка 6
@@ -68,6 +68,8 @@ getAnyRoute(app);//ответ на /*
 logutUser(app);//реагирует на конпку выход из профиля по пути /logout
 
 getUserInfo(app);//ответ на user
+
+addToCart(app);//добавление товара в корзину /cart
 
 getExpressBackendRoute(app);//ответ на express_backend
 

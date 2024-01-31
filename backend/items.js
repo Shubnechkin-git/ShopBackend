@@ -1,7 +1,7 @@
 const { getData } = require('./misc');
 
 const getHotItems = (app) => {
-    app.get('/hot_items', (req, res) => {
+    app.post('/hot_items', (req, res) => {
         getData('hot', (error, data) => {
             if (error) {
                 return res.status(500).send('Internal Server Error');
@@ -12,7 +12,7 @@ const getHotItems = (app) => {
 }
 
 const getNoveltyItems = (app) => {
-    app.get('/novelty_items', (req, res) => {
+    app.post('/novelty_items', (req, res) => {
         getData('nov', (error, data) => {
             if (error) {
                 return res.status(500).send('Internal Server Error');
@@ -23,7 +23,7 @@ const getNoveltyItems = (app) => {
 }
 
 const getDiscountItems = (app) => {
-    app.get('/discount_items', (req, res) => {
+    app.post('/discount_items', (req, res) => {
         getData('disc', (error, data) => {
             if (error) {
                 return res.status(500).send('Internal Server Error');
