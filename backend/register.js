@@ -1,14 +1,8 @@
 const mysql = require('mysql');
 const uuid = require('uuid');
 
-const register = (app) => {
+const register = (app, connection) => {
     app.post('/register', (req, res) => {
-        const connection = mysql.createConnection({
-            host: 'localhost',
-            user: 'root',
-            password: 'root',
-            database: 'gena_booker'
-        });
         console.log(req.body);
         const { username, mail, password, number } = req.body;
         const sessionId = uuid.v4();
@@ -24,7 +18,6 @@ const register = (app) => {
                 res.json({ success: true });
             }
         });
-        connection.end();
     });
 }
 
