@@ -1,21 +1,23 @@
 const { getData } = require('./misc');
 
-const getHotItems = (app, connection) => {
+const mysql = require('mysql');
+
+const getHotItems = (app, pool, connection) => {
     app.post('/hot_items', async (req, res) => {
         try {
-            const data = await getData('hot', connection);
+            const data = await getData('hot', pool, connection);
             res.send(data);
         } catch (error) {
             console.error(error);
             res.status(500).send('Internal Server Error');
         }
     });
-} 
+}
 
-const getNoveltyItems = (app, connection) => {
+const getNoveltyItems = (app, pool, connection) => {
     app.post('/novelty_items', async (req, res) => {
         try {
-            const data = await getData('nov', connection);
+            const data = await getData('nov', pool, connection);
             res.send(data);
         } catch (error) {
             console.error(error);
@@ -24,10 +26,10 @@ const getNoveltyItems = (app, connection) => {
     });
 }
 
-const getDiscountItems = (app, connection) => {
+const getDiscountItems = (app, pool, connection) => {
     app.post('/discount_items', async (req, res) => {
         try {
-            const data = await getData('disc', connection);
+            const data = await getData('disc', pool, connection);
             res.send(data);
         } catch (error) {
             console.error(error);
@@ -36,11 +38,11 @@ const getDiscountItems = (app, connection) => {
     });
 }
 
-const getProduct = (app, connection) => {
+const getProduct = (app, pool, connection) => {
     app.get('/product', (req, res) => {
         res.send(req);
     });
-} 
+}
 
 module.exports = {
     getHotItems,

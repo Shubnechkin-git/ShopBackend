@@ -3,6 +3,7 @@ const app = express(); //Строка 2
 const port = process.env.PORT || 5000; //Строка 3
 const path = require('path');
 const mysql = require('mysql');
+const axios = require('axios');
 
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -11,30 +12,97 @@ const login = require('./login');
 const register = require('./register');
 const { getHotItems, getNoveltyItems, getDiscountItems, getProduct } = require('./items');
 const { deleteFromCart, getUserCart, getAnyRoute, getExpressBackendRoute, checkUser, getUserInfo, checkSession, logutUser, addToCart, sendMail } = require('./routes');
-const { setColor, getColor, getAllProducts, getAllOrders } = require('./admin');
+const { setColor, getColor, getAllProducts, getAllOrders, addProduct, changeStatus } = require('./admin');
 const { getCatalogItem } = require('./catalog');
 // Сообщение о том, что сервер запущен и прослушивает указанный порт 
 app.listen(port, () => console.log(`Listening on port http://localhost:${port}`)); //Строка 6
-
 var cors = require('cors')
-const corsOptions = {
-  origin: 'http://localhost:3000', // Укажите ваш домен React-приложения
-  optionsSuccessStatus: 200, // некоторые старые браузеры (IE11, старый Android) не отправляют 204
-};
 
-// var cors = require('cors')
-// const corsOptions = {
-//   origin: 'https://testbuild-27ld.onrender.com/', // Укажите ваш домен React-приложения
-//   optionsSuccessStatus: 200, // некоторые старые браузеры (IE11, старый Android) не отправляют 204
-// };
+// URL вашего сервера
+const url = 'https://testbuild-27ld.onrender.com/';
+
+// Интервал пингования в миллисекундах (например, 1 минут)
+const pingInterval = 13 * 60 * 1000;
+// const pingInterval = 10 * 1000;
+
+// Функция для пингования сервера
+function pingServer() {
+  axios.get(url)
+    .then(() => {
+      const now = new Date();
+      const offset = now.getTimezoneOffset() / 60; // Получаем смещение часового пояса в часах
+      const gmtPlusFour = now.getTime() + (offset + 4) * 60 * 60 * 1000; // Добавляем смещение часового пояса к времени
+      const pingTime = new Date(gmtPlusFour).toLocaleString(); // Преобразуем время в локальную строку даты и времени
+      console.log(`Pinged server at ${pingTime}`);
+    })
+    .catch((err) => {
+      console.error(`Error pinging server: ${err.message}`);
+    });
+}
+
+
+// Пингуем сервер каждые pingInterval миллисекунд
+setInterval(pingServer, pingInterval);
+
+if (process.env.NODE_ENV === 'development') {
+  const corsOptions = {
+    origin: 'http://localhost:3000', // Укажите ваш домен React-приложения
+    optionsSuccessStatus: 200, // некоторые старые браузеры (IE11, старый Android) не отправляют 204
+  };
+  app.use(express.static(path.join(__dirname, '../my-shop/build/')));
+  app.use(cors(corsOptions));
+
+} else {
+  const corsOptions = {
+    origin: 'https://testbuild-27ld.onrender.com/', // Укажите ваш домен React-приложения
+    optionsSuccessStatus: 200, // некоторые старые браузеры (IE11, старый Android) не отправляют 204
+  };
+  app.use(cors(corsOptions));
+  app.use(express.static(path.join(__dirname, '../build/')));
+}
+
+var pool;
+var connection;
+
+if (process.env.NODE_ENV === 'development') {
+  connection = mysql.createConnection({
+    connectionLimit: 10,
+    host: 'localhost',
+    user: 'root',
+    password: 'root',
+    database: 'gena_booker'
+  });
+
+  pool = mysql.createPool({
+    connectionLimit: 10,
+    host: 'localhost',
+    user: 'root',
+    password: 'root',
+    database: 'gena_booker'
+  });
+} else {
+  connection = mysql.createConnection({
+    host: 'bds8x3eqjt659zexhm6k-mysql.services.clever-cloud.com',
+    user: 'ukpquiunilgd9a3d',
+    password: 'sKRLt00lD4FffUASauii',
+    database: 'bds8x3eqjt659zexhm6k',
+    port: 3306
+  });
+
+  pool = mysql.createPool({
+    connectionLimit: 10,
+    host: 'bds8x3eqjt659zexhm6k-mysql.services.clever-cloud.com',
+    user: 'ukpquiunilgd9a3d',
+    password: 'sKRLt00lD4FffUASauii',
+    database: 'bds8x3eqjt659zexhm6k',
+    port: 3306
+  });
+}
 
 // AWy6bmydAyybAzzbdc8V email pass
 
-app.use(cors(corsOptions));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '100mb' }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, '../my-shop/build/')));
-// app.use(express.static(path.join(__dirname, '../build/')));
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -53,75 +121,68 @@ app.use((req, res, next) => {
 
 })
 
+console.log("NODE_ENV:", process.env.NODE_ENV);
+
 app.options('/register', cors());
 app.options('/catalog', cors());
 
-const connection = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
-  database: 'gena_booker'
-});
+register(app, pool, connection);
 
-// const connection = mysql.createConnection({
-//   host: 'bds8x3eqjt659zexhm6k-mysql.services.clever-cloud.com',
-//   user: 'ukpquiunilgd9a3d',
-//   password: 'sKRLt00lD4FffUASauii',
-//   database: 'bds8x3eqjt659zexhm6k',
-//   port: 3306
-// });
+login(app, pool, connection);
 
-register(app, connection);
+getHotItems(app, pool, connection);
 
-login(app, connection);
+getNoveltyItems(app, pool, connection);
 
-getHotItems(app, connection);
+getDiscountItems(app, pool, connection);
 
-getNoveltyItems(app, connection);
+getProduct(app, pool, connection); //возращает  
 
-getDiscountItems(app, connection);
+getCatalogItem(app, pool, connection); //возращает товары в каталог
 
-getProduct(app, connection); //возращает  
+checkUser(app, pool, connection);//проверяет есть ли пользователь в бд 
 
-getCatalogItem(app, connection); //возращает товары в каталог
+checkSession(app, pool, connection);//проверяет сессию 
 
-checkUser(app, connection);//проверяет есть ли пользователь в бд 
+getAnyRoute(app, pool, connection);//ответ на /*  
 
-checkSession(app, connection);//проверяет сессию 
+logutUser(app, pool, connection);//реагирует на конпку выход из профиля по пути /logout
 
-getAnyRoute(app, connection);//ответ на /*  
+getUserInfo(app, pool, connection);//ответ на user 
 
-logutUser(app, connection);//реагирует на конпку выход из профиля по пути /logout
+addToCart(app, pool, connection);//добавление товара в корзину /cart  
 
-getUserInfo(app, connection);//ответ на user 
+getUserCart(app, pool, connection); //ответ на /getCart - вывод товаров в корзину  
 
-addToCart(app, connection);//добавление товара в корзину /cart  
+getExpressBackendRoute(app, pool, connection);//ответ на express_backend  
 
-getUserCart(app, connection); //ответ на /getCart - вывод товаров в корзину  
+deleteFromCart(app, pool, connection);//удаляет овар из коризины 
 
-getExpressBackendRoute(app, connection);//ответ на express_backend  
+setColor(app, pool, connection); //смена цвета заднего фона
 
-deleteFromCart(app, connection);//удаляет овар из коризины 
+getColor(app, pool, connection); //ответ на /getColor - вывод настройки цветов сайта  
 
-setColor(app, connection); //смена цвета заднего фона
+getAllProducts(app, pool, connection); //ответ на /get_all_products - вывод товаров в адмиеку 
 
-getColor(app, connection); //ответ на /getColor - вывод настройки цветов сайта  
+getAllOrders(app, pool, connection); //ответ на /orders - вывод товаров в адмиеку 
 
-getAllProducts(app, connection); //ответ на /get_all_products - вывод товаров в адмиеку 
+addProduct(app, pool, connection); //ответ на /add_product - добавление нового товара
 
-getAllOrders(app, connection); //ответ на /orders - вывод товаров в адмиеку 
+changeStatus(app, pool, connection); //ответ на /change_ыtatus - смена статуса заказа
 
-sendMail(app, connection); //ответ на /send_email - отправка письма на почту
+sendMail(app, pool, connection); //ответ на /send_email - отправка письма на почту
 
-app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, '../my-shop/build/', 'index.html'));
-});
-
-// app.use((req, res) => {
-//   if (req.url != '/' && req.url != '/catalog' && req.url != '/profile' && req.url != '/about' && req.url != '/cart') {
-//     console.log(req.url);
-//     res.status(404).sendFile(path.join(__dirname, '../build', '404.html'));
-//   }
-//   else
-//     res.status(404).sendFile(path.join(__dirname, '../build', 'index.html'));
-// });
+if (process.env.NODE_ENV === 'development') {
+  app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, '../my-shop/build/', 'index.html'));
+  });
+} else {
+  app.use((req, res) => {
+    if (req.url != '/' && req.url != '/catalog' && req.url != '/profile' && req.url != '/about' && req.url != '/cart') {
+      console.log(req.url);
+      res.status(404).sendFile(path.join(__dirname, '../build', '404.html'));
+    }
+    else
+      res.status(404).sendFile(path.join(__dirname, '../build', 'index.html'));
+  });
+}

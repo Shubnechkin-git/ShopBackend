@@ -1,7 +1,9 @@
 const { text } = require('express');
 const path = require('path');
 
-const sendMail = (app, connectio) => {
+const mysql = require('mysql');
+
+const sendMail = (app, pool, connection) => {
     const nodemailer = require("nodemailer");
 
     const transporter = nodemailer.createTransport({
@@ -13,8 +15,8 @@ const sendMail = (app, connectio) => {
             pass: "UsUhK7VygPsfWYxe5Ny9",
         },
     });
+
     app.post('/send_email', (req, res) => {
-        console.log(req.body);
         if (req.body.type === 'contact')
             transporter.sendMail({
                 from: '"GenaBooker_Store" <discursiveee@mail.ru>', // sender address
@@ -88,129 +90,389 @@ const sendMail = (app, connectio) => {
                 }
             });
         else if (req.body.type === 'order') {
+            let items = '';
+            let totalPrice = 0;
+            req.body.cartItems.forEach((item, index) => {
+                items += `
+                <tr>
+                <td><p><strong>${item.product_name}</strong></p></td>
+                <td><p><strong>${item.count} шт.</strong></p></td>
+                <td><p><strong>${item.total_price}</strong></p></td>
+                </tr>
+                `;
+                totalPrice += item.total_price;
+            });
+            // console.log(items);
             transporter.sendMail({
                 from: '"GenaBooker_Store" <discursiveee@mail.ru>', // sender address
                 to: req.body.email, // list of receivers
-                subject: `Ваш заказ №X в GenaBooker_Store находится в обработке, ${req.body.firstname}!`, // Subject line orderNumber
-                text: `Добрый день, ${req.body.firstname},\n\nВаш заказ №X в GenaBooker_Store находится в обработке. Мы ценим ваше время и обязательно уделим внимание вашему заказу.\n\nЗаказ:\n\n${req.body.order}\n\nДанные для доставки:\n\nФамилия: ${req.body.lastname}\nИмя: ${req.body.firstname}\nОтчество: ${req.body.patrynomic}\nEmail: ${req.body.email}\nТелефон: ${req.body.tel}\nАдрес: ${req.body.address}\n\nМы свяжемся с вами в ближайшее время по номеру телефона ${req.body.tel}, чтобы подтвердить ваш заказ.\n\nС уважением,\nКоманда GenaBooker_Store`, // plain text body orderNumber
+                subject: `Ваш заказ в GenaBooker_Store находится в обработке, ${req.body.firstname} !`, // Subject line orderNumber
+                text: `Добрый день, ${req.body.firstname}, \n\nВаш заказ в GenaBooker_Store находится в обработке.Мы ценим ваше время и обязательно уделим внимание вашему заказу.\n\nЗаказ: \n\n${req.body.cartItems} \n\nДанные для доставки: \n\nФамилия: ${req.body.lastname} \nИмя: ${req.body.firstname} \nОтчество: ${req.body.patrynomic} \nEmail: ${req.body.email} \nТелефон: ${req.body.tel} \nАдрес: ${req.body.address} \n\nМы свяжемся с вами в ближайшее время по номеру телефона ${req.body.tel}, чтобы подтвердить ваш заказ.\n\nС уважением, \nКоманда GenaBooker_Store`, // plain text body orderNumber
                 html: `
-                      <!DOCTYPE html>
-                      <html>
-                      <head>
-                          <style>
-                              body {
-                                  font-family: Arial, sans-serif;
-                                  margin: 0;
-                                  padding: 0;
-                              }
-                              .container {
-                                  width: 80%;
-                                  margin: auto;
-                                  background-color: #f8f9fa;
-                                  border-radius: 5px;
-                                  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-                              }
-                              .header {
-                                  text-align: center;
-                                  padding: 20px;
-                                  background-color: #343a40;
-                                  color: #fff;
-                                  border-top-left-radius: 5px;
-                                  border-top-right-radius: 5px;
-                              }
-                              .main-content {
-                                  padding: 20px;
-                              }
-                              .footer {
-                                  text-align: center;
-                                  padding: 20px;
-                                  background-color: #343a40;
-                                  color: #fff;
-                                  border-bottom-left-radius: 5px;
-                                  border-bottom-right-radius: 5px;
-                              }
-                          </style>
-                      </head>
-                      <body>
-                          <div class="container">
-                              <div class="header">
-                                  <h1>GenaBooker_Store</h1>
-                              </div>
-                              <div class="main-content">
-                                  <p>Добрый день, ${req.body.firstname}!</p>
-                                  <p>Ваш заказ №X в GenaBooker_Store находится в обработке. Мы ценим ваше время и обязательно уделим внимание вашему заказу.</p> //orderNumber
-                                  <p>Заказ:</p>
-                                  <p><strong>xxxxxxxxxxx</strong></p>//req.body.order
-                                  <p>Данные для доставки:</p>
-                                  <p><strong>Фамилия:</strong> ${req.body.lastname}</p>
-                                  <p><strong>Имя:</strong> ${req.body.firstname}</p>
-                                  <p><strong>Отчество:</strong> ${req.body.patrynomic}</p>
-                                  <p><strong>Email:</strong> ${req.body.email}</p>
-                                  <p><strong>Телефон:</strong> ${req.body.tel}</p>
-                                  <p><strong>Адрес:</strong> ${req.body.address}</p>
-                                  <p>Мы свяжемся с вами в ближайшее время по номеру телефона ${req.body.tel}, чтобы подтвердить ваш заказ.</p>
-                              </div>
-                              <div class="footer">
-                                  <p>С уважением,</p>
-                                  <p>Команда GenaBooker_Store</p>
-                              </div>
-                          </div>
-                      </body>
-                      </html>
-              ` // html body
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <style>
+                      body {
+                        font-family: Arial, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                      }
+                
+                      .container {
+                        width: 100%;
+                        margin: auto;
+                        background-color: #f8f9fa;
+                        border-radius: 5px;
+                        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                      }
+                
+                      .header {
+                        text-align: center;
+                        padding: 20px;
+                        background-color: #343a40;
+                        color: #fff;
+                        border-top-left-radius: 5px;
+                        border-top-right-radius: 5px;
+                      }
+                
+                      .main-content {
+                        padding: 20px;
+                      }
+                
+                      .footer {
+                        text-align: center;
+                        padding: 20px;
+                        background-color: #343a40;
+                        color: #fff;
+                        border-bottom-left-radius: 5px;
+                        border-bottom-right-radius: 5px;
+                      }
+                
+                      table {
+                        width: 100%;
+                        border-collapse: collapse;
+                      }
+                
+                      th,
+                      td {
+                        padding: 12px;
+                        text-align: left;
+                        border-bottom: 1px solid #ddd;
+                      }
+                
+                      th {
+                        background-color: #f2f2f2;
+                        font-weight: bold;
+                      }
+                
+                      tr:hover {
+                        background-color: #f5f5f5;
+                      }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="container">
+                      <div class="header">
+                        <h1>GenaBooker_Store</h1>
+                      </div>
+                      <div class="main-content">
+                        <p>Добрый день, ${req.body.firstname}!</p>
+                        <p>Ваш заказ в GenaBooker_Store находится в обработке. Мы ценим ваше время и обязательно уделим внимание вашему заказу.</p>
+                        <hr>
+                        <p>Заказ:</p>
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>Название</th>
+                              <th>Количество</th>
+                              <th>Цена</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            ${items}
+                          </tbody>
+                        </table>
+                        <p><strong>Текущий статус: </strong>В обработке.</p>
+                        <p><strong>Итоговая цена: </strong>${totalPrice} руб.</p>
+                        <hr>
+                        <p>Данные для доставки:</p>
+                        <p><strong>Фамилия:</strong> ${req.body.lastname}</p>
+                        <p><strong>Имя:</strong> ${req.body.firstname}</p>
+                        <p><strong>Отчество:</strong> ${req.body.patrynomic}</p>
+                        <p><strong>Email:</strong> ${req.body.email}</p>
+                        <p><strong>Телефон:</strong> ${req.body.tel}</p>
+                        <p><strong>Адрес:</strong> ${req.body.address}</p>
+                        <p>Мы свяжемся с вами в ближайшее время по номеру телефона ${req.body.tel}, чтобы подтвердить ваш заказ.</p>
+                      </div>
+                      <div class="footer">
+                        <p>С уважением,</p>
+                        <p>Команда GenaBooker_Store</p>
+                      </div>
+                    </div>
+                  </body>
+                </html>
+                ` // html body
             }, (error, info) => {
                 // if (error) {
                 // }
-                if (info) return res.status(200).json({ success: true, data: info, message: 'Сообщение доставленно!' });
+                if (info) return res.status(200).json({ success: true, data: info, message: 'Заказ создан!' });
                 else {
                     return res.status(500).json({ success: false, message: "Ошибка повторите позже!" });
                 }
             });
-        } else { res.status(500).json({ success: false, message: 'Ошибка повторите позже!' }) }
+        }
+        else if (req.body.type === 'completed') {
+            console.log(req.body);
+            transporter.sendMail({
+                from: '"GenaBooker_Store" <discursiveee@mail.ru>', // sender address
+                to: req.body.email, // list of receivers
+                subject: `Ваш заказ в GenaBooker_Store подтвержден!`, // Subject line orderNumber
+                text: `Добрый день\n\nМы рады сообщить, что ваш заказ в GenaBooker_Store подтвержден.`,
+                html: `
+                  <!DOCTYPE html>
+                  <html>
+                    <head>
+                      <style>
+                        body {
+                          font-family: Arial, sans-serif;
+                          margin: 0;
+                          padding: 0;
+                        }
+              
+                        .container {
+                          width: 100%;
+                          margin: auto;
+                          background-color: #f8f9fa;
+                          border-radius: 5px;
+                          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                        }
+              
+                        .header {
+                          text-align: center;
+                          padding: 20px;
+                          background-color: #343a40;
+                          color: #fff;
+                          border-top-left-radius: 5px;
+                          border-top-right-radius: 5px;
+                        }
+              
+                        .main-content {
+                          padding: 20px;
+                        }
+              
+                        .footer {
+                          text-align: center;
+                          padding: 20px;
+                          background-color: #343a40;
+                          color: #fff;
+                          border-bottom-left-radius: 5px;
+                          border-bottom-right-radius: 5px;
+                        }
+              
+                        table {
+                          width: 100%;
+                          border-collapse: collapse;
+                        }
+              
+                        th,
+                        td {
+                          padding: 12px;
+                          text-align: left;
+                          border-bottom: 1px solid #ddd;
+                        }
+              
+                        th {
+                          background-color: #f2f2f2;
+                          font-weight: bold;
+                        }
+              
+                        tr:hover {
+                          background-color: #f5f5f5;
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="container">
+                        <div class="header">
+                          <h1>GenaBooker_Store</h1>
+                        </div>
+                        <div class="main-content">
+                          <p>Добрый день!</p>
+                          <p>Мы рады сообщить, что ваш заказ в GenaBooker_Store подтвержден.</p>
+                          <hr>
+                          <p><strong>Текущий статус: </strong>Подтвержден.</p>
+                          <hr>
+                        </div>
+                        <div class="footer">
+                          <p>Спасибо за покупку в GenaBooker_Store!</p>
+                          <p>С уважением,</p>
+                          <p>Команда GenaBooker_Store</p>
+                        </div>
+                      </div>
+                    </body>
+                  </html>
+                ` // html body
+            }, (error, info) => {
+                // if (error) {
+                // }
+                if (info) return res.status(200).json({ success: true, data: info, message: 'Заказ подтвержден!' });
+                else {
+                    return res.status(500).json({ success: false, message: "Ошибка повторите позже!" });
+                }
+            });
+        }
+        else if (req.body.type === 'rejected') {
+            console.log(req.body);
+            transporter.sendMail({
+                from: '"GenaBooker_Store" <discursiveee@mail.ru>', // sender address
+                to: req.body.email, // list of receivers
+                subject: `Ваш заказ в GenaBooker_Store отклонен!`, // Subject line orderNumber
+                text: `Добрый день\n\nК сожалению, ваш заказ в GenaBooker_Store отклонен.`,
+                html: `
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <style>
+                      body {
+                        font-family: Arial, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                      }
+          
+                      .container {
+                        width: 100%;
+                        margin: auto;
+                        background-color: #f8f9fa;
+                        border-radius: 5px;
+                        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                      }
+          
+                      .header {
+                        text-align: center;
+                        padding: 20px;
+                        background-color: #343a40;
+                        color: #fff;
+                        border-top-left-radius: 5px;
+                        border-top-right-radius: 5px;
+                      }
+          
+                      .main-content {
+                        padding: 20px;
+                      }
+          
+                      .footer {
+                        text-align: center;
+                        padding: 20px;
+                        background-color: #343a40;
+                        color: #fff;
+                        border-bottom-left-radius: 5px;
+                        border-bottom-right-radius: 5px;
+                      }
+          
+                      table {
+                        width: 100%;
+                        border-collapse: collapse;
+                      }
+          
+                      th,
+                      td {
+                        padding: 12px;
+                        text-align: left;
+                        border-bottom: 1px solid #ddd;
+                      }
+          
+                      th {
+                        background-color: #f2f2f2;
+                        font-weight: bold;
+                      }
+          
+                      tr:hover {
+                        background-color: #f5f5f5;
+                      }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="container">
+                      <div class="header">
+                        <h1>GenaBooker_Store</h1>
+                      </div>
+                      <div class="main-content">
+                        <p>Добрый день!</p>
+                        <p>К сожалению, ваш заказ в GenaBooker_Store отклонен.</p>
+                        <hr>
+                        <p><strong>Текущий статус: </strong>Отклонен.</p>
+                        <hr>
+                      </div>
+                      <div class="footer">
+                        <p>Спасибо за покупку в GenaBooker_Store!</p>
+                        <p>С уважением,</p>
+                        <p>Команда GenaBooker_Store</p>
+                      </div>
+                    </div>
+                  </body>
+                </html>
+              ` // html body
+            }, (error, info) => {
+                // if (error) {
+                // }
+                if (info) return res.status(200).json({ success: true, data: info, message: 'Заказ отклонен!' });
+                else {
+                    return res.status(500).json({ success: false, message: "Ошибка повторите позже!" });
+                }
+            });
+        }
+        else { res.status(500).json({ success: false, message: 'Ошибка повторите позже!' }) }
     });
 }
 
-const getAnyRoute = (app, connection) => {
+const getAnyRoute = (app, pool, connection) => {
     if (process.env.NODE_ENV === 'production') {
         // app.get("/*", function (req, res) {
         //     // res.sendFile(path.join(__dirname + './../my-shop', 'build', 'index.html'));
         //     res.sendFile(path.join(__dirname));
         //     // res.sendFile(path.join(__dirname + '/build', 'index.html'));
         // });
-        app.get('*', (req, res) => {
-            res.sendFile(path.join(__dirname, '../my-shop/build', 'index.html'));
-        });
+        // app.get('*', (req, res) => {
+        //     res.sendFile(path.join(__dirname, '../my-shop/build', 'index.html'));
+        // });
     }
 }
 
-const getExpressBackendRoute = (app, connection) => {
+const getExpressBackendRoute = (app, pool, connection) => {
     app.get('/express_backend', (req, res) => {
         res.send({ express: "Подключено" });
         console.log("App.js sessionId:", req.cookies.sessionId);
     });
 }
 
-const checkUser = (app, connection) => {
+const checkUser = (app, pool, connection) => {
     app.post('/checkUser', (req, res) => {
 
         const { username, mail, number } = req.body;
         const query = 'SELECT COUNT(*) as count FROM users WHERE username = ? OR mail = ? Or number = ?';
-
-        connection.query(query, [username, mail, number], (error, results) => {
-            if (error) {
-                console.error('Ошибка при проверке пользователя:', error);
-                res.status(500).json({ success: false, error: 'Ошибка при проверке пользователя' });
+        pool.getConnection((err, connection) => {
+            if (err) {
+                res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
             } else {
-                const userExists = results[0].count > 0;
-                res.json({ success: true, exists: userExists });
+                connection.query(query, [username, mail, number], (error, results) => {
+                    if (error) {
+                        console.error('Ошибка при проверке пользователя:', error);
+                        connection.release();
+                        res.status(500).json({ success: false, error: 'Ошибка при проверке пользователя' });
+                    } else {
+                        const userExists = results[0].count > 0;
+                        connection.release();
+                        res.json({ success: true, exists: userExists });
+                    }
+                });
             }
-        });
-
-
+        }
+        );
     });
 }
 
-const getUserInfo = (app, connection) => {
+const getUserInfo = (app, pool, connection) => {
     // Эндпоинт для получения информации о пользователе
     app.post('/user', (req, res) => {
         const sessionId = req.cookies.sessionId;
@@ -220,48 +482,58 @@ const getUserInfo = (app, connection) => {
 
             // Подготовленный запрос для безопасности
             const query = 'SELECT id,username,mail,number,isAdmin FROM users WHERE sessionId = ?';
-
-            connection.query(query, [sessionId], (error, results) => {
-                if (error) {
-                    console.error('Ошибка при запросе к базе данных:', error);
-                    res.json({ success: false, error: 'Ошибка при запросе к базе данных' });
+            pool.getConnection((err, connection) => {
+                if (err) {
+                    res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
                 } else {
-                    if (results.length > 0) {
-                        const userInfo = results[0]; // Предполагаем, что результат - это объект пользователя
-                        res.json({ success: true, user: userInfo });
-                    } else {
-                        res.json({ success: false, error: 'Пользователь не найден' });
-                    }
+                    connection.query(query, [sessionId], (error, results) => {
+                        if (error) {
+                            console.error('Ошибка при запросе к базе данных:', error);
+                            res.json({ success: false, error: 'Ошибка при запросе к базе данных' });
+                        } else {
+                            if (results.length > 0) {
+                                const userInfo = results[0]; // Предполагаем, что результат - это объект пользователя
+                                connection.release();
+                                res.json({ success: true, user: userInfo });
+                            } else {
+                                connection.release();
+                                res.json({ success: false, error: 'Пользователь не найден' });
+                            }
+                        }
+
+                        // Закрываем соединение с базой данных
+
+                    });
                 }
-
-                // Закрываем соединение с базой данных
-
-            });
+            }
+            );
         } else {
             res.json({ success: false, error: 'Отсутствует sessionId' });
         }
     });
 }
 
-const checkSession = (app, connection) => {
+const checkSession = (app, pool, connection) => {
     app.get('/checkSession', (req, res) => {
         const sessionId = req.cookies.sessionId;
-
         if (sessionId) {
-            // Здесь вы должны выполнить запрос к базе данных для проверки существования сессии
-
             const query = 'SELECT COUNT(*) as count FROM users WHERE sessionId = ?';
-
-            connection.query(query, [sessionId], (error, results) => {
-                if (error) {
-                    console.error('Ошибка при проверке сессии:', error);
-                    res.status(500).json({ success: false, error: 'Ошибка при проверке сессии' });
+            pool.getConnection((err, connection) => {
+                if (err) {
+                    console.log(err);
+                    res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
                 } else {
-                    const sessionExists = results[0].count > 0;
-                    res.json({ success: sessionExists });
+                    connection.query(query, [sessionId], (error, results) => {
+                        connection.release();
+                        if (error) {
+                            console.error('Ошибка при проверке сессии:', error);
+                            res.status(500).json({ success: false, error: 'Ошибка при проверке сессии' });
+                        } else {
+                            const sessionExists = results[0].count > 0;
+                            res.json({ success: sessionExists });
+                        }
+                    });
                 }
-
-
             });
         } else {
             res.json({ success: false });
@@ -269,7 +541,7 @@ const checkSession = (app, connection) => {
     });
 }
 
-const getProduct = (productId, categoryName, tableName, connection) => {
+const getProduct = (productId, categoryName, tableName, pool, connection) => {
     return new Promise((resolve, reject) => {
 
         let productInfo = {
@@ -299,36 +571,47 @@ const getProduct = (productId, categoryName, tableName, connection) => {
             }
         }
 
-        const query = `SELECT * FROM ${productInfo.table_name} WHERE id = ?`;
-
-        connection.query(query, [productId], (error, results) => {
-            if (error) {
-
-                reject('Ошибка при получении товара: ' + error.message);
+        const query = `SELECT * FROM ${productInfo.table_name} WHERE id = ? `;
+        pool.getConnection((err, connection) => {
+            if (err) {
+                res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
             } else {
-                if (results.length > 0) {
-                    productInfo.title = results[0].title;
-                    productInfo.price = results[0].price;
-                    productInfo.img = results[0].img;
+                connection.query(query, [productId], (error, results) => {
+                    if (error) {
 
-                    resolve(productInfo);
-                } else {
-                    reject('Товар с id ' + productId + ' не найден в таблице ' + table_name);
-                }
+                        connection.release();
+                        reject('Ошибка при получении товара: ' + error.message);
+                    } else {
+                        if (results.length > 0) {
+                            productInfo.title = results[0].title;
+                            productInfo.price = results[0].price;
+                            productInfo.img = results[0].img;
+
+                            connection.release();
+                            resolve(productInfo);
+                        } else {
+                            connection.release();
+                            reject('Товар с id ' + productId + ' не найден в таблице ' + table_name);
+                        }
+                    }
+                });
             }
-        });
+        }
+        );
     });
 };
 
 
-const addToCart = (app, connection) => {
+const addToCart = (app, pool, connection) => {
 
     // SQL-запрос для добавления товара в корзину
     const addToCartQuery = `
-        INSERT INTO cart (user_id, product_id, product_name, category, count, price, total_price, table_name)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE count = count + VALUES(count), total_price = count * price
-    `;
+    INSERT INTO cart(user_id, product_id, product_name, category, count, price, total_price, table_name, status)
+    VALUES(?, ?, ?, ?, ?, ?, ?, ?, 'waiting')
+    ON DUPLICATE KEY UPDATE
+      count = IF(status = 'waiting', count + VALUES(count), 1),
+      total_price = IF(status = 'waiting', count * price, price * VALUES(count)),
+      status = 'waiting';`;
 
     app.post('/cart', async (req, res) => {
         // Получение данных о товаре из тела запроса
@@ -336,7 +619,7 @@ const addToCart = (app, connection) => {
 
         // console.log(req.body);
         // Получение информации о товаре из product_info
-        const product_info = await getProduct(product_id, category, null, connection); // Предполагается, что product_info содержит информацию о товаре
+        const product_info = await getProduct(product_id, category, null, pool, connection); // Предполагается, что product_info содержит информацию о товаре
 
         // Проверка наличия необходимых данных
         if (!product_id || !category || !user_info || !product_info) {
@@ -344,101 +627,137 @@ const addToCart = (app, connection) => {
         }
 
         // Попытка выполнить SQL-запрос
-        connection.query(addToCartQuery, [user_info.id, product_id, product_info.title, category, count, product_info.price, product_info.price, product_info.table_name], (error, results) => {
-            if (error) {
-                console.error(error);
-                return res.status(500).json({ error: 'Произошла ошибка при добавлении товара в корзину' });
+        pool.getConnection((err, connection) => {
+            if (err) {
+                res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
             } else {
-                if (count == 1) {
-                    return res.status(200).json({
-                        success: true, message: 'Товар успешно добавлен в корзину!', data: {
-                            product_id, product_info
+                connection.query(addToCartQuery, [user_info.id, product_id, product_info.title, category, count, product_info.price, product_info.price, product_info.table_name], (error, results) => {
+                    if (error) {
+                        connection.release();
+                        console.error(error);
+                        return res.status(500).json({ error: 'Произошла ошибка при добавлении товара в корзину' });
+                    } else {
+                        if (count == 1) {
+                            connection.release();
+                            return res.status(200).json({
+                                success: true, message: 'Товар успешно добавлен в корзину!', data: {
+                                    product_id, product_info
+                                }
+                            });
                         }
-                    });
-                }
-                else if (count == -1) {
-                    return res.status(200).json({
-                        success: true, message: 'Товар успешно удален из корзины!', data: {
-                            product_id, product_info
+                        else if (count == -1) {
+                            connection.release();
+                            return res.status(200).json({
+                                success: true, message: 'Товар успешно удален из корзины!', data: {
+                                    product_id, product_info
+                                }
+                            });
                         }
-                    });
-                }
+                    }
+                });
             }
-        });
+        }
+        );
     });
 };
 
-const deleteFromCart = (app, connection) => {
+const deleteFromCart = (app, pool, connection) => {
     app.post('/deleteCart', async (req, res) => {
-
         const id = req.body.id;
-        const query = `DELETE FROM cart WHERE id=?`;
-
-        connection.query(query, id, (results, error) => {
-            if (results) {
-                console.log(results);
-                return res.status(200).json({ success: true, message: 'Произошла ошибка при удаление товара из корзины!' })
+        const query = `DELETE FROM cart WHERE id =? `;
+        pool.getConnection((err, connection) => {
+            if (err) {
+                res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
+            } else {
+                connection.query(query, id, (results, error) => {
+                    if (results) {
+                        console.log(results);
+                        connection.release();
+                        return res.status(200).json({ success: true, message: 'Произошла ошибка при удаление товара из корзины!' })
+                    }
+                    else {
+                        console.error(error);
+                        connection.release();
+                        return res.status(500).json({ success: false, error: 'Товар был успешно удален из корзины!' });
+                    }
+                });
             }
-            else {
-                console.error(error);
-                return res.status(500).json({ success: false, error: 'Товар был успешно удален из корзины!' });
-            }
-        });
+        }
+        );
     });
 }
 
-const getUserCart = (app, connection) => {
+const getUserCart = (app, pool, connection) => {
     app.post('/getCart', async (req, res) => {
         const userId = req.body.sessionInfo.userInfo.id;
         if (req.body.cartProductId == null) {
 
-            const query = `SELECT * FROM cart WHERE user_id = ?`;
-
-            connection.query(query, [userId], async (error, results) => {
-                if (error) {
-
-                    console.error('Ошибка при получении корзины пользователя:', error);
-                    res.status(500).json({ error: 'Ошибка при получении корзины пользователя' });
+            const query = `SELECT * FROM cart WHERE user_id = ? AND status LIKE 'waiting' `;
+            pool.getConnection((err, connection) => {
+                if (err) {
+                    res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
                 } else {
-                    try {
-                        const cartItems = [];
-                        for (const item of results) {
-                            const productInfo = await getProduct(item.product_id, null, item.table_name, connection);
-                            cartItems.push({ ...item, product_info: productInfo });
-                        }
+                    connection.query(query, [userId], async (error, results) => {
+                        if (error) {
 
-                        // console.log('Корзина пользователя успешно получена:', cartItems);
-                        res.status(200).json(cartItems);
-                    } catch (error) {
-                        console.error('Ошибка при получении информации о продукте:', error);
-                        res.status(500).json({ error: 'Ошибка при получении информации о продукте' });
-                    }
+                            console.error('Ошибка при получении корзины пользователя:', error);
+                            connection.release();
+                            res.status(500).json({ error: 'Ошибка при получении корзины пользователя' });
+                        } else {
+                            try {
+                                const cartItems = [];
+                                for (const item of results) {
+                                    const productInfo = await getProduct(item.product_id, null, item.table_name, pool, connection);
+                                    cartItems.push({ ...item, product_info: productInfo });
+                                }
+
+                                // console.log('Корзина пользователя успешно получена:', cartItems);
+                                connection.release();
+                                res.status(200).json(cartItems);
+                            } catch (error) {
+                                console.error('Ошибка при получении информации о продукте:', error);
+                                connection.release();
+                                res.status(500).json({ error: 'Ошибка при получении информации о продукте' });
+                            }
+                        }
+                    });
                 }
-            });
+            }
+            );
         }
         else {
-            const query = `SELECT * FROM cart WHERE id = ?`;
+            const query = `SELECT * FROM cart WHERE id = ? `;
 
-            connection.query(query, [req.body.cartProductId], async (error, results) => {
-                if (error) {
-
-                    console.error('Ошибка при получении корзины пользователя:', error);
-                    res.status(500).json({ error: 'Ошибка при получении корзины пользователя' });
+            pool.getConnection((err, connection) => {
+                if (err) {
+                    res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
                 } else {
-                    try {
-                        res.status(200).json(results[0]);
-                    } catch (error) {
-                        console.error('Ошибка при получении информации о продукте:', error);
-                        res.status(500).json({ error: 'Ошибка при получении информации о продукте' });
-                    }
+                    connection.query(query, [req.body.cartProductId], async (error, results) => {
+                        if (error) {
+
+                            console.error('Ошибка при получении корзины пользователя:', error);
+                            connection.release();
+                            res.status(500).json({ error: 'Ошибка при получении корзины пользователя' });
+                        } else {
+                            try {
+                                connection.release();
+                                res.status(200).json(results[0]);
+                            } catch (error) {
+                                console.error('Ошибка при получении информации о продукте:', error);
+                                connection.release();
+                                res.status(500).json({ error: 'Ошибка при получении информации о продукте' });
+                            }
+                        }
+                    });
                 }
-            });
+            }
+            );
         }
     });
 };
 
 
-const logutUser = (app, connection) => {
+const logutUser = (app, pool, connection) => {
     app.post('/logout', (req, res) => {
         // Удаление куки сессии
         res.clearCookie('sessionId');

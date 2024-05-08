@@ -1,17 +1,27 @@
 const mysql = require('mysql');
 
-const getCatalogItem = (app, connection) => {
+const getCatalogItem = (app, pool, connection) => {
     app.get('/catalog', (req, res) => {
         res.setHeader('Content-Type', 'application/json');
-        connection.query('SELECT * from products', (error, results) => {
-            if (error) {
-                console.error('Ошибка при выполнении запроса:', error);
-                res.status(500).json({ error: 'Произошла ошибка при получении каталога товаров.' });
-                return;
+        pool.getConnection((err, connection) => {
+            if (err) {
+                console.log(err);
+                res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
+            } else {
+                connection.query('SELECT * from products', (error, results) => {
+                    if (error) {
+                        console.error('Ошибка при выполнении запроса:', error);
+                        connection.release();
+                        res.status(500).json({ error: 'Произошла ошибка при получении каталога товаров.' });
+                        return;
+                    }
+                    // Закрытие соединения с базой данных
+                    connection.release();
+                    res.send(JSON.stringify(results));
+                });
             }
-            // Закрытие соединения с базой данных
-            res.send(JSON.stringify(results));
-        });
+        }
+        );
     });
 }
 
