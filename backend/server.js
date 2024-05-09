@@ -11,8 +11,8 @@ const bodyParser = require('body-parser');
 const login = require('./login');
 const register = require('./register');
 const { getHotItems, getNoveltyItems, getDiscountItems, getProduct } = require('./items');
-const { deleteFromCart, getUserCart, getAnyRoute, getExpressBackendRoute, checkUser, getUserInfo, checkSession, logutUser, addToCart, sendMail } = require('./routes');
-const { setColor, getColor, getAllProducts, getAllOrders, addProduct, changeStatus } = require('./admin');
+const { deleteFromCart, getUserCart, getAnyRoute, getExpressBackendRoute, checkUser, getUserInfo, checkSession, logutUser, addToCart, sendMail, search } = require('./routes');
+const { setColor, getColor, getAllProducts, getAllOrders, addProduct, changeStatus, editProduct, delProduct } = require('./admin');
 const { getCatalogItem } = require('./catalog');
 // Сообщение о том, что сервер запущен и прослушивает указанный порт 
 app.listen(port, () => console.log(`Listening on port http://localhost:${port}`)); //Строка 6
@@ -132,6 +132,8 @@ login(app, pool, connection);
 
 getHotItems(app, pool, connection);
 
+search(app, pool, connection); // поиск товара по /api?query=Товар1
+
 getNoveltyItems(app, pool, connection);
 
 getDiscountItems(app, pool, connection);
@@ -167,6 +169,10 @@ getAllProducts(app, pool, connection); //ответ на /get_all_products - в�
 getAllOrders(app, pool, connection); //ответ на /orders - вывод товаров в адмиеку 
 
 addProduct(app, pool, connection); //ответ на /add_product - добавление нового товара
+
+editProduct(app, pool, connection); //ответ на /edit_product - редактирование товара
+
+delProduct(app, pool, connection); //ответ на /del_product - удаление товара
 
 changeStatus(app, pool, connection); //ответ на /change_ыtatus - смена статуса заказа
 

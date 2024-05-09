@@ -2,13 +2,14 @@ const mysql = require('mysql');
 
 const getCatalogItem = (app, pool, connection) => {
     app.get('/catalog', (req, res) => {
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Type', 'application/json'); 
         pool.getConnection((err, connection) => {
             if (err) {
                 console.log(err);
                 res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
             } else {
-                connection.query('SELECT * from products', (error, results) => {
+                // connection.query('SELECT * from products ORDER BY price DESC', (error, results) => {
+                connection.query(`SELECT * from products ORDER BY price ${req.query.sortType}`, (error, results) => {
                     if (error) {
                         console.error('Ошибка при выполнении запроса:', error);
                         connection.release();

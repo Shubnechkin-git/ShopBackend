@@ -1,6 +1,6 @@
 const mysql = require('mysql');
 const { errorMonitor } = require('nodemailer/lib/xoauth2');
-
+ 
 const getColor = (app, pool, connection) => {
     app.get('/getColor', async (req, res) => {
         pool.getConnection((err, connection) => {
@@ -72,6 +72,52 @@ const addProduct = (app, pool, connection) => {
         );
         // res.status(200).json({ success: true, message: 'Продукт успешно добавлен' });
     })
+}
+
+const editProduct = (app, pool, connection) => {
+    app.put('/edit_product', (req, res) => {
+        const sql = `UPDATE ${req.body.table} SET title = '${req.body.title}', price = ${req.body.price}, available = ${req.body.available}, img='${req.body.img}' WHERE id = ${req.body.id}`;
+        pool.getConnection((err, connection) => {
+            if (err) {
+                res.status(500).json({ success: false, error: err, message: 'Ошибка при подключение к бд' });
+            } else {
+                connection.query(sql, (error, result) => {
+                    if (result) {
+                        connection.release();
+                        return res.status(200).json({ success: true, data: result, message: "Продукт успешно обновлен!" });
+                    }
+                    else if (error) {
+                        connection.release();
+                        return res.status(500).json({ success: false, data: error, message: 'Ошибка при выполнение запроса!' });
+                    }
+                });
+            }
+        }
+        );
+    });
+}
+
+const delProduct = (app, pool, connection) => {
+    app.delete('/del_product', (req, res) => {
+        const sql = `DELETE FROM ${req.query.table} WHERE id = ${req.query.id}`;
+        pool.getConnection((err, connection) => {
+            if (err) {
+                res.status(500).json({ success: false, error: err, message: 'Ошибка при подключение к бд' });
+            } else {
+                connection.query(sql, (error, result) => {
+                    if (result) {
+                        connection.release();
+                        return res.status(200).json({ success: true, data: result, message: "Продукт успешно удален!" });
+                    }
+                    else if (error) {
+                        connection.release();
+                        return res.status(500).json({ success: false, data: error, message: 'Ошибка при выполнение запроса!' });
+                    }
+                });
+            }
+        }
+        );
+    });
 }
 
 const getAllProducts = (app, pool, connection) => {
@@ -182,5 +228,7 @@ module.exports = {
     getAllProducts,
     getAllOrders,
     addProduct,
+    editProduct,
+    delProduct,
     changeStatus
 };  

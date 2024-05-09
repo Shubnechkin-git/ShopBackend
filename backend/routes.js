@@ -601,6 +601,40 @@ const getProduct = (productId, categoryName, tableName, pool, connection) => {
     });
 };
 
+const search = (app, pool, connection) => {
+    app.get('/search', (req, res) => {
+        pool.getConnection((err, connection) => {
+            if (err) {
+                res.status(500).json({ success: false, error: 'Ошибка при подключение к бд' });
+            } else {
+                connection.query(`SELECT id, title, price, img, available FROM products WHERE title LIKE '%${req.query.query}%'
+                UNION ALL 
+                SELECT id, title, price, img, available FROM novelty WHERE title LIKE '%${req.query.query}%'
+                UNION ALL
+                SELECT id, title, price, img, available FROM discounts WHERE title LIKE '%${req.query.query}%'
+                UNION ALL
+                SELECT id, title, price, img, available FROM items WHERE title LIKE '%${req.query.query}%'`, (error, results) => {
+                    if (error) {
+                        connection.release();
+                        console.log("err: ", error);
+                        // } else {
+                        //     return res.status(200).json({ success: true, colors: error, message: 'Товар не найден!' })
+                        // }
+                    }
+                    else if (results) {
+                        if (Object.keys(results).length > 0) {
+                            console.log(results);
+                            return res.status(200).json({ success: true, data: results, message: 'Товар найден!' })
+                        }
+                        else {
+                            return res.status(200).json({ success: false, data: results, message: 'Товар не найден!' })
+                        }
+                    }
+                });
+            }
+        });
+    });
+}
 
 const addToCart = (app, pool, connection) => {
 
@@ -775,5 +809,6 @@ module.exports = {
     addToCart,
     getUserCart,
     deleteFromCart,
-    sendMail
+    sendMail,
+    search
 }
