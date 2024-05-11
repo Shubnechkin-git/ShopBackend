@@ -1,7 +1,7 @@
 const mysql = require('mysql');
 
 const getCatalogItem = (app, pool, connection) => {
-    app.get('/catalog', (req, res) => {
+    app.get('/get_catalog', (req, res) => {
         res.setHeader('Content-Type', 'application/json'); 
         pool.getConnection((err, connection) => {
             if (err) {

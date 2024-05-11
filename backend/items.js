@@ -38,15 +38,8 @@ const getDiscountItems = (app, pool, connection) => {
     });
 }
 
-const getProduct = (app, pool, connection) => {
-    app.get('/product', (req, res) => {
-        res.send(req);
-    });
-}
-
 module.exports = {
     getHotItems,
     getNoveltyItems,
     getDiscountItems,
-    getProduct
 }

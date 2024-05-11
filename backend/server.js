@@ -10,7 +10,7 @@ const bodyParser = require('body-parser');
 
 const login = require('./login');
 const register = require('./register');
-const { getHotItems, getNoveltyItems, getDiscountItems, getProduct } = require('./items');
+const { getHotItems, getNoveltyItems, getDiscountItems } = require('./items');
 const { deleteFromCart, getUserCart, getAnyRoute, getExpressBackendRoute, checkUser, getUserInfo, checkSession, logutUser, addToCart, sendMail, search } = require('./routes');
 const { setColor, getColor, getAllProducts, getAllOrders, addProduct, changeStatus, editProduct, delProduct } = require('./admin');
 const { getCatalogItem } = require('./catalog');
@@ -137,8 +137,6 @@ search(app, pool, connection); // поиск товара по /api?query=Тов
 getNoveltyItems(app, pool, connection);
 
 getDiscountItems(app, pool, connection);
-
-getProduct(app, pool, connection); //возращает  
 
 getCatalogItem(app, pool, connection); //возращает товары в каталог
 

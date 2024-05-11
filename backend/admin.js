@@ -1,6 +1,6 @@
 const mysql = require('mysql');
 const { errorMonitor } = require('nodemailer/lib/xoauth2');
- 
+
 const getColor = (app, pool, connection) => {
     app.get('/getColor', async (req, res) => {
         pool.getConnection((err, connection) => {
@@ -52,7 +52,7 @@ const setColor = (app, pool, connection) => {
 const addProduct = (app, pool, connection) => {
     app.post('/add_product', (req, res) => {
         // console.log(req.body);
-        const sql = `INSERT INTO ${req.body.table} (title, price, img, available) VALUES ('${req.body.newTitle}', '${req.body.newPriceValue}', '${req.body.imageBase64}', '${req.body.newAvilable}')`;
+        const sql = `INSERT INTO ${req.body.table} (title, price, img, available, description) VALUES ('${req.body.newTitle}', '${req.body.newPriceValue}', '${req.body.imageBase64}', '${req.body.newAvilable}', '${req.body.description}')`;
         pool.getConnection((err, connection) => {
             if (err) {
                 res.status(500).json({ success: false, error: err, message: 'Ошибка при подключение к бд' });
@@ -76,7 +76,7 @@ const addProduct = (app, pool, connection) => {
 
 const editProduct = (app, pool, connection) => {
     app.put('/edit_product', (req, res) => {
-        const sql = `UPDATE ${req.body.table} SET title = '${req.body.title}', price = ${req.body.price}, available = ${req.body.available}, img='${req.body.img}' WHERE id = ${req.body.id}`;
+        const sql = `UPDATE ${req.body.table} SET title = '${req.body.title}', price = ${req.body.price}, available = ${req.body.available}, img='${req.body.img}', description='${req.body.description}' WHERE id = ${req.body.id}`;
         pool.getConnection((err, connection) => {
             if (err) {
                 res.status(500).json({ success: false, error: err, message: 'Ошибка при подключение к бд' });
@@ -123,13 +123,13 @@ const delProduct = (app, pool, connection) => {
 const getAllProducts = (app, pool, connection) => {
     app.get('/get_all_products', (req, res) => {
         const sql = `
-            SELECT id, title, price, img, 'discounts' as table_name, available FROM discounts
+            SELECT id, title, price, img, 'discounts' as table_name, available, description FROM discounts
             UNION
-            SELECT id, title, price, img, 'items' as table_name, available FROM items
+            SELECT id, title, price, img, 'items' as table_name, available, description FROM items
             UNION
-            SELECT id, title, price, img, 'novelty' as table_name, available FROM novelty
+            SELECT id, title, price, img, 'novelty' as table_name, available, description FROM novelty
             UNION
-            SELECT id, title, price, img, 'products' as table_name, available FROM products
+            SELECT id, title, price, img, 'products' as table_name, available, description FROM products
         `;
         pool.getConnection((err, connection) => {
             if (err) {
